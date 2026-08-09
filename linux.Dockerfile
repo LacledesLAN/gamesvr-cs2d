@@ -3,17 +3,17 @@ FROM lacledeslan/steamcmd:linux AS downloader
 ARG CONTENT_SERVER=content.lacledeslan.net
 
 RUN echo "Downloading cs2d base" && \
-    curl -sSL "http://${CONTENT_SERVER}/fastDownloads/_installers/cs2d_1016_linux.zip" -o /tmp/cs2d_1016_linux.zip && \
+    curl -sSL "http://${CONTENT_SERVER}/fastDownloads/_installers/cs2d_1017_linux.zip" -o /tmp/cs2d_linux.zip && \
 echo "Validating download against known hash" && \
-    echo "E2DE8000B639AADDD373BF47568A4B55DAE59D3E246E7A109FB61394A5E45381  /tmp/cs2d_1016_linux.zip" | sha256sum -c - && \
+    echo "a248938a2a987d8bcc772e809d4bf9e764279566907769d3af1220743e26d279  /tmp/cs2d_linux.zip" | sha256sum -c - && \
 echo "Extracting CS2D base files" && \
     mkdir --parents /output && \
-    unzip /tmp/cs2d_1016_linux.zip -d /output;
+    unzip /tmp/cs2d_linux.zip -d /output;
 
 RUN echo "Downloading cs2d server files" && \
-    curl -sSL "http://${CONTENT_SERVER}/fastDownloads/_installers/cs2d_dedicated_linux_1016.zip" -o /tmp/cs2d_dedicated_linux.zip && \
+    curl -sSL "http://${CONTENT_SERVER}/fastDownloads/_installers/cs2d_1.0.1.7_dedicated_linux.zip" -o /tmp/cs2d_dedicated_linux.zip && \
 echo "Validating download against known hash" && \
-    echo "D3ABF492D1ABE1B5BB534422CA5E2C402AB76227AEBDBC197A2BD0CE591146F1  /tmp/cs2d_dedicated_linux.zip" | sha256sum -c - && \
+    echo "4b6573d9ec88a0f62ab3dac08c68ea89aac16902fe324ee6296607dbed2176f3  /tmp/cs2d_dedicated_linux.zip" | sha256sum -c - && \
 echo "Extracting CS2D server files" && \
     mkdir --parents /output && \
     unzip /tmp/cs2d_dedicated_linux.zip -d /output;

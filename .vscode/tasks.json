@@ -6,7 +6,19 @@
         {
             "label": "Latest - Build & Test",
             "type": "shell",
-            "command": "docker run -it --rm lacledeslan/gamesvr-cs2d ./ll-tests/gamesvr-cs2d.sh;",
+            "command": "docker run -it --rm gamesvr-cs2d:latest ./ll-tests/gamesvr-cs2d.sh;",
+            "dependsOn": "Latest - Build Docker Image",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build and Shell In",
+            "type": "shell",
+            "command": "docker run -it --rm --net=host gamesvr-cs2d:latest /bin/bash",
             "dependsOn": "Latest - Build Docker Image",
             "group": "build",
             "presentation": {
@@ -21,10 +33,11 @@
             "dockerBuild": {
                 "context": "${workspaceFolder}",
                 "dockerfile": "${workspaceFolder}/linux.Dockerfile",
-                "tag": "lacledeslan/gamesvr-cs2d:latest",
+                "tag": "gamesvr-cs2d:latest",
                 "labels": {
                     "com.lacledeslan.build-node": "${env:computername}"
-                }
+                },
+                "pull": true
             }
         }
     ]
