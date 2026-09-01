@@ -11,8 +11,51 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  CONTENT_SERVER: "content.lacledeslan.net"
+
 jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify HTTP and HTTPS reachability
+        id: check_server
+        run: |
+          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" --connect-timeout 10 "http://${CONTENT_SERVER}" || echo "000")
+          HTTPS_STATUS=$(curl -o /dev/null -s -w "%{http_code}" --connect-timeout 10 "https://${CONTENT_SERVER}" || echo "000")
+
+          echo "HTTP Status: $HTTP_STATUS"
+          echo "HTTPS Status: $HTTPS_STATUS"
+
+          FAILED=false
+          DETAILS=""
+
+          if [ "$HTTP_STATUS" -eq 000 ] || [ "$HTTP_STATUS" -ge 400 ]; then
+            FAILED=true
+            DETAILS="${DETAILS}\n- HTTP check failed (Status: ${HTTP_STATUS})"
+          fi
+
+          if [ "$HTTPS_STATUS" -eq 000 ] || [ "$HTTPS_STATUS" -ge 400 ]; then
+            FAILED=true
+            DETAILS="${DETAILS}\n- HTTPS check failed (Status: ${HTTPS_STATUS})"
+          fi
+
+          if [ "$FAILED" = true ]; then
+            echo "details=${DETAILS}" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Send Slack Alert on Failure
+        if: failure() && steps.check_server.outcome == 'failure'
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{
+              \"text\": \"⚠️ *Preflight Check Failed for Workflow: ${GITHUB_WORKFLOW}*\n*Server:* \`${CONTENT_SERVER}\`\n*Run ID:* ${GITHUB_RUN_ID}\n*Details:*${{ steps.check_server.outputs.details }}\"
+            }" \
+            "${{ secrets.SLACK_CLOUDALERTS_WEBHOOK_URL }}"
+
   build-and-push:
+    needs: preflight
     runs-on: ubuntu-latest
 
     steps:
@@ -56,10 +99,3 @@ jobs:
       - name: Push to GitHub Packages
         if: ${{ github.event_name != 'pull_request' }}
         run: docker push ghcr.io/lacledeslan/gamesvr-cs2d:latest
-    #   - name: Trigger downstream build of lacledeslan/gamesvr-cs2d-freeplay
-    #     if: ${{ github.event_name != 'pull_request' }}
-    #     run: |-
-    #       curl -XPOST -u "${{ secrets.GH_PAT_USERNAME }}:${{ secrets.GH_PAT_TOKEN }}" \
-    #       -H "Accept: application/vnd.github.v3+json" -H "Content-Type: application/json" \
-    #       --data '{"event_type": "${{ github.repository }} was updated", "client_payload": {"Run Number":"${{ github.run_number }}", "Run ID":"${{ github.run_id }}", "Source Commit":"${{ github.sha }}"}}' \
-    #       https://api.github.com/repos/LacledesLAN/gamesvr-cs2d-freeplay/dispatches
