@@ -16,7 +16,7 @@ env:
 
 jobs:
   preflight:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Verify HTTP and HTTPS reachability
         id: check_server
@@ -56,7 +56,7 @@ jobs:
 
   build-and-push:
     needs: preflight
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
